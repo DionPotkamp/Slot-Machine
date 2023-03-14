@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Slot Machine</string>
+    <string name="slot_1">Slot 1</string>
+    <string name="slot_2">Slot 2</string>
+    <string name="slot_3">Slot 3</string>
+    <string name="_0">0</string>
+    <string name="spin">SPIN</string>
+    <string name="author" translatable="false">Dion Potkamp v1.0.0</string>
 </resources>
