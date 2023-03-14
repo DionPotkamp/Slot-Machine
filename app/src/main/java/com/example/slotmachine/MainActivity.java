@@ -1,14 +1,18 @@
 package com.example.slotmachine;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Objects;
 
@@ -41,15 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
         drawables = new Drawable[4];
         for (int i = 1; i <= 4; i++)
-            drawables[i-1] = getDrawable(getResources().getIdentifier("drawable/icon" + i, null, getPackageName()));
+            drawables[i - 1] = getDrawable(getResources().getIdentifier("drawable/icon" + i, null, getPackageName()));
 
         spinButton = findViewById(R.id.spinButton);
 
         handler = new Handler();
         updateSlots = new UpdateSlots[3];
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++)
             updateSlots[i] = new UpdateSlots(counterTexts[i], imageViews[i]);
-        }
+
         randomizeSlotsDelay();
 
         spinButton.setOnClickListener(this::onClickSpinButton);
@@ -63,37 +67,42 @@ public class MainActivity extends AppCompatActivity {
                 handler.removeCallbacks(updateSlots[i]);
 
             randomizeSlotsDelay();
-
             spinButton.setText("SPIN");
 
             if (
                     counterTexts[0].getText().equals(counterTexts[1].getText()) &&
                             counterTexts[1].getText().equals(counterTexts[2].getText())
             ) {
+                vibrate(500, VibrationEffect.DEFAULT_AMPLITUDE, 3);
                 notifyJackpot("Jackpot!", android.R.drawable.star_big_on);
             } else
-            // check if 2 out of 3 are the same
-            if (
-                    counterTexts[0].getText().equals(counterTexts[1].getText()) ||
-                            counterTexts[1].getText().equals(counterTexts[2].getText()) ||
-                            counterTexts[0].getText().equals(counterTexts[2].getText())
-            ) {
-                notifyJackpot("Semi-Jackpot!", android.R.drawable.star_big_off);
-            }
+                // check if 2 out of 3 are the same
+                if (
+                        counterTexts[0].getText().equals(counterTexts[1].getText()) ||
+                                counterTexts[1].getText().equals(counterTexts[2].getText()) ||
+                                counterTexts[0].getText().equals(counterTexts[2].getText())
+                ) {
+                    vibrate(250, VibrationEffect.DEFAULT_AMPLITUDE, 2);
+                    notifyJackpot("Semi-Jackpot!", android.R.drawable.star_big_off);
+                }
 
             return;
         }
 
+        vibrate(100);
         for (int i = 0; i < 3; i++)
             handler.postDelayed(updateSlots[i], 0);
+
 
         spinButton.setText("STOP");
     }
 
     private void randomizeSlotsDelay() {
         for (int i = 0; i < 3; i++) {
-            // randomize delay between 500 and 1000
-            updateSlots[i].randomDelay = (int) (Math.random() * 500) + 500;
+            // randomize delay
+            updateSlots[i].randomDelay = (int) (Math.random() * 500) + 300;
+            // randomize starting time (thus the starting image)
+            updateSlots[i].time = (int) (Math.random() * 3);
         }
     }
 
@@ -147,5 +156,31 @@ public class MainActivity extends AppCompatActivity {
             onClickSpinButton(spinButton);
 
         super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    private void vibrate(int duration) {
+        vibrate(duration, VibrationEffect.DEFAULT_AMPLITUDE);
+    }
+
+    private void vibrate(int duration, int vibrationEffect, int repeat) {
+        for (int i = 0; i < repeat; i++) {
+            vibrate(duration, vibrationEffect);
+            // wait before next vibration
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+
+    private void vibrate(int duration, int vibrationEffect) {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        // Vibrate for duration amount of milliseconds
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(duration, vibrationEffect));
+        } else {
+            //deprecated in API 26
+            v.vibrate(duration);
+        }
     }
 }
